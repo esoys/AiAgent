@@ -1,11 +1,7 @@
-from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
-get_file_content("calculator", "main.py")
+write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum")
 
-get_file_content("calculator", "pkg/calculator.py")
+write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")
 
-get_file_content("calculator", "/bin/cat")  # (this should return an error string)
-
-get_file_content(
-    "calculator", "pkg/does_not_exist.py"
-)  # (this should return an error string)
+write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
