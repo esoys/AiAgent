@@ -13,9 +13,9 @@ def get_files_info(working_directory, directory="."):
         if target_abs_path == working_abs_path or target_abs_path.startswith(
             working_abs_path + os.sep
         ):
-            file_list = f"Result for '{directory}' directory:\n"
+            file_list = f"Result for '{directory}' directory: "
             for file in os.listdir(target_abs_path):
-                file_list += f"- {file}: files_size={os.path.getsize(target_abs_path + os.sep + file)}, is_dir={os.path.isdir(target_abs_path + os.sep + file)}\n"
+                file_list += f"- {file}: files_size={os.path.getsize(target_abs_path + os.sep + file)}, is_dir={os.path.isdir(target_abs_path + os.sep + file)}; "
 
             return file_list
 

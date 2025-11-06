@@ -1,6 +1,5 @@
 import os
 import subprocess
-import functools
 from google.genai import types
 
 

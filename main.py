@@ -24,6 +24,8 @@ When a user asks a question or makes a request, make a function call plan. You c
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
 """
 
+loop_counter = 0
+
 available_functions = types.Tool(
     function_declarations=[
         schema_get_files_info,
@@ -41,36 +43,60 @@ else:
     sys.exit(1)
 
 messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)])]
-response = client.models.generate_content(
-    model="gemini-2.0-flash-001",
-    contents=messages,
-    config=types.GenerateContentConfig(
-        tools=[available_functions], system_instruction=system_prompt
-    ),
-)
 
-if response.function_calls:
-    verbose = "--verbose" in sys.argv
+while loop_counter < 20:
+    loop_counter += 1
 
-    for function_call_part in response.function_calls:
-        function_result = call_function(function_call_part, verbose=verbose)
-
-        if (
-            not function_result.parts
-            or not getattr(function_result.parts[0], "function_response", None)
-            or not function_result.parts[0].function_response.response
-        ):
-            raise RuntimeError(
-                "Function call did not return a function_response with a response"
-            )
-
-        if verbose:
-            print(f"-> {function_result.parts[0].function_response.response}")
-        # print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-else:
-    if "--verbose" in sys.argv:
-        print(
-            f"Response:  {response.text}\nUser prompt: {user_prompt}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}"
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001",
+            contents=messages,
+            config=types.GenerateContentConfig(
+                tools=[available_functions], system_instruction=system_prompt
+            ),
         )
-    else:
-        print(f"Response:  {response.text}")
+
+        if response.function_calls:
+            verbose = "--verbose" in sys.argv
+
+            for function_call_part in response.function_calls:
+                function_result = call_function(function_call_part, verbose=verbose)
+
+                if (
+                    not function_result.parts
+                    or not getattr(function_result.parts[0], "function_response", None)
+                    or not function_result.parts[0].function_response.response
+                ):
+                    raise RuntimeError(
+                        "Function call did not return a function_response with a response"
+                    )
+
+                if verbose:
+                    print(f"-> {function_result.parts[0].function_response.response}")
+
+                func_call = types.Content(
+                    role="user",
+                    parts=[
+                        types.Part(
+                            function_response=function_result.parts[0].function_response
+                        )
+                    ],
+                )
+                messages.append(func_call)
+
+        else:
+            for candidate in response.candidates:
+                messages.append(candidate.content)
+
+            if "--verbose" in sys.argv:
+                print(
+                    f"Response:  {response.text}\nUser prompt: {user_prompt}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}"
+                )
+                break
+            else:
+                print(f"Response:  {response.text}")
+                break
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
