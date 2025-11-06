@@ -2,7 +2,7 @@ import os
 from google.genai import types
 
 
-def write_file(working_directory, file_path, content):
+def write_file_content(working_directory, file_path, content):
     working_abs_path = os.path.abspath(working_directory)
     file_abs_path = os.path.abspath(os.path.join(working_directory, file_path))
     dir_name = os.path.dirname(file_abs_path)
@@ -25,8 +25,8 @@ def write_file(working_directory, file_path, content):
         return f"Error: {e}"
 
 
-schema_write_file = types.FunctionDeclaration(
-    name="write_file",
+schema_write_file_content = types.FunctionDeclaration(
+    name="write_file_content",
     description="Overwrites the contents of a specified File. Creates File and Directory if they don't exist, path is relative to the working directory.",
     parameters=types.Schema(
         type=types.Type.OBJECT,
